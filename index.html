@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Đấu Trường AI - Quản Trị Game</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+      <style>
+            body {
+                  background-color: #f9fafb;
+                  margin: 0;
+                  padding: 0;
+            }
+
+            .team-avatar {
+                  width: 60px;
+                  height: 60px;
+                  object-fit: cover;
+                  border-radius: 9999px;
+            }
+
+            .expandable-section {
+                  overflow: hidden;
+                  transition: max-height 0.4s ease;
+                  max-height: 1000px;
+                  /* mặc định mở rộng */
+            }
+
+            .expandable-section.collapsed {
+                  max-height: 0;
+            }
+
+            #round-content {
+                  opacity: 1;
+                  transition: opacity 0.3s ease-in-out;
+            }
+
+            #round-content.fade-out {
+                  opacity: 0;
+            }
+      </style>
+</head>
+
+<body>
+      <h1 class="text-3xl font-bold text-center p-5 mb-6 bg-blue-600 text-white">Quản Trị Game: Đấu Trường AI</h1>
+      <div class="max-w-8xl mx-auto px-2">
+
+            <!-- Thông báo popup -->
+            <div id="toastSuccess"
+                  class="fixed top-4 right-4 z-50 hidden bg-green-500 text-white px-4 py-2 rounded shadow">
+            </div>
+            <div id="toastFailed"
+                  class="fixed top-4 right-4 z-50 hidden bg-red-500 text-white px-4 py-2 rounded shadow">
+            </div>
+
+            <!-- PHẦN 1: SETUP Đội Chơi -->
+            <section id="setup-game" class="mb-10 px-4">
+                  <div class="bg-white shadow rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-6 border-b pb-3">
+                              <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                                    🎮 Setup Đội Chơi
+                              </h2>
+                              <div class="space-x-2">
+                                    <button onclick="openTeamModal()"
+                                          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition">
+                                          <i class="fa-solid fa-plus mr-2"></i>Thêm đội</button>
+                                    <button onclick="resetTeams()"
+                                          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow transition">
+                                          <i class="fa-solid fa-trash mr-2"></i> Reset Dữ Liệu ĐỘi</button>
+                              </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-4">
+                              <h3 class="text-lg font-semibold text-gray-700">📋 Danh Sách Các Đội Tham Gia</h3>
+                              <div class="space-x-2">
+                                    <button id="btnExpandTeams" onclick="toggleTeams(true)"
+                                          class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded hidden">
+                                          <i class="fa-solid fa-chevron-down mr-1"></i> Mở rộng
+                                    </button>
+                                    <button id="btnCollapseTeams" onclick="toggleTeams(false)"
+                                          class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded">
+                                          <i class="fa-solid fa-chevron-up mr-1"></i> Thu gọn
+                                    </button>
+                              </div>
+                        </div>
+
+                        <!-- Đây là nơi chứa danh sách các đội -->
+                        <div id="teams-section" class="expandable-section">
+                              <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                        </div>
+
+                  </div>
+            </section>
+
+            <!-- PHẦN 1: SETUP Tòa Thành AI -->
+            <section id="castle-setup" class="mb-10 px-4">
+                  <div class="bg-white shadow rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-4 border-b pb-3">
+                              <h2 class="text-2xl font-bold text-gray-800">🏰 Setup Tòa Thành AI</h2>
+                              <div class="space-x-2">
+                                    <button onclick="openCastleModal()"
+                                          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                          <i class="fa-solid fa-plus mr-1"></i> Thêm Tòa Thành
+                                    </button>
+                                    <button onclick="resetCastles()"
+                                          class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                                          <i class="fa-solid fa-trash mr-1"></i> Reset Dữ Liệu Thành
+                                    </button>
+                              </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-4">
+                              <h3 class="text-lg font-semibold text-gray-700">📋 Danh Sách Các Tòa Thành</h3>
+                              <div class="space-x-2">
+                                    <button id="btnExpandCastle" onclick="toggleCastle(true)"
+                                          class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded hidden">
+                                          <i class="fa-solid fa-chevron-down mr-1"></i> Mở rộng
+                                    </button>
+                                    <button id="btnCollapseCastle" onclick="toggleCastle(false)"
+                                          class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded">
+                                          <i class="fa-solid fa-chevron-up mr-1"></i> Thu gọn
+                                    </button>
+                              </div>
+                        </div>
+                        <!-- Đây là nơi chứa danh sách các tòa thành -->
+                        <div id="castle-section" class="expandable-section">
+                              <div id="castle-list"
+                                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                        </div>
+                  </div>
+            </section>
+
+            <!-- PHẦN 2: Ghi nhận quân đội di chuyển vào các tòa thành -->
+            <section id="battle-inputs" class="mb-10 px-4">
+                  <div class="bg-white shadow rounded-xl p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">⚔️ Phần 2: Ghi nhận quân đội di chuyển vào các
+                              tòa thành
+                        </h2>
+
+                        <!-- Điều hướng vòng chơi -->
+                        <div class="flex justify-between items-center mb-4 px-4">
+                              <button onclick="prevRound()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg "
+                                    id="prevRoundBtn">⬅️ Vòng trước</button>
+                              <h3 class="text-xl font-bold text-blue-700" id="roundTitle">🌀 VÒNG CHƠI SỐ 1</h3>
+                              <button onclick="nextRound()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                                    id="nextRoundBtn">Vòng sau ➡️</button>
+                        </div>
+
+                        <!-- Vùng hiển thị nội dung -->
+                        <div id="round-content" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4"></div>
+
+                  </div>
+            </section>
+
+
+
+
+            <!-- Modal thêm đội -->
+            <div id="teamModal"
+                  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40">
+                  <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-lg relative">
+                        <h3 class="text-2xl font-bold text-center mb-6 text-gray-800">🛡️ Thêm Đội Mới</h3>
+
+                        <!-- Nhập tên đội -->
+                        <label for="teamNameInput" class="block text-sm font-medium text-gray-700 mb-1">Tên đội</label>
+                        <input type="text" id="teamNameInput"
+                              class="border border-gray-300 w-full p-2 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              placeholder="Nhập tên đội">
+
+                        <!-- Chọn ảnh đại diện -->
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Ảnh đại diện</label>
+                        <div class="flex items-center gap-3 mb-4">
+                              <label for="teamAvatarInput"
+                                    class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer transition">
+                                    Chọn hình ảnh avatar
+                              </label>
+                              <span id="fileName" class="text-sm text-gray-600 italic hidden"></span>
+                        </div>
+                        <input type="file" id="teamAvatarInput" accept="image/*" class="hidden">
+                        <img id="avatarPreview"
+                              class="team-avatar hidden mb-4 border border-gray-200 shadow rounded-full w-20 h-20 object-cover mx-auto" />
+
+                        <!-- Nút hành động -->
+                        <div class="flex justify-end gap-3 mt-6">
+                              <button onclick="closeTeamModal()"
+                                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition">
+                                    Hủy
+                              </button>
+                              <button onclick="confirmAddTeam()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                    Thêm
+                              </button>
+                        </div>
+                  </div>
+            </div>
+
+            <!-- Modal thêm thành AI -->
+            <div id="castleModal"
+                  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-40">
+                  <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md relative">
+                        <h3 class="text-xl font-bold mb-4">🧱 Thêm Tòa Thành AI</h3>
+
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Tên tòa thành</label>
+                        <input type="text" id="castleNameInput" class="border w-full p-2 mb-3 rounded"
+                              placeholder="VD: Thành ChatGPT">
+
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Điểm vinh quang</label>
+                        <input type="number" id="castleGloryInput" class="border w-full p-2 mb-3 rounded" min="1"
+                              placeholder="VD: 30">
+
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Số lần có thể chiếm (1-5)</label>
+                        <input type="number" id="castleCaptureInput" class="border w-full p-2 mb-3 rounded" min="1"
+                              max="5" placeholder="VD: 3">
+
+                        <label class="block mb-2 text-sm font-medium text-gray-700">Xuất hiện vòng:</label>
+                        <select id="castleRoundInput" class="border w-full p-2 rounded mb-4">
+                              <option value="">Ngay từ đầu</option>
+                              <option value="3">Ngay từ vòng 3 (ngẫu nhiên)</option>
+                              <option value="5">Ngay từ vòng 5 (ngẫu nhiên)</option>
+                        </select>
+
+                        <div class="text-right space-x-2">
+                              <button onclick="closeCastleModal()"
+                                    class="bg-gray-400 text-white px-4 py-1 rounded">Hủy</button>
+                              <button onclick="confirmAddCastle()"
+                                    class="bg-blue-600 text-white px-4 py-1 rounded">Thêm</button>
+                        </div>
+                  </div>
+            </div>
+
+
+      </div>
+
+      <script>
+            // Phần Setup đội =======================================================================================
+            let teams = [];
+            // Show Thông báo
+            const toastSuccess = document.getElementById("toastSuccess");
+            const toastFailed = document.getElementById("toastFailed")
+            function showToastSuccess(message) {
+                  toastSuccess.innerHTML = `<i class="fa-regular fa-circle-check mr-2 text-white"></i> ${message}`;
+                  toastSuccess.classList.remove("hidden");
+                  setTimeout(() => toastSuccess.classList.add("hidden"), 4000);
+            }
+            function showToastFailed(message) {
+                  toastFailed.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2 text-white"></i> ${message}`;
+                  toastFailed.classList.remove("hidden");
+                  setTimeout(() => toastFailed.classList.add("hidden"), 4000);
+            }
+            // Ẩn hiện danh sách các đội tham gia
+            function toggleTeams(show) {
+                  const section = document.getElementById("teams-section");
+                  const btnExpand = document.getElementById("btnExpandTeams");
+                  const btnCollapse = document.getElementById("btnCollapseTeams");
+
+                  if (show) {
+                        section.classList.remove("collapsed");
+                        btnExpand.classList.add("hidden");
+                        btnCollapse.classList.remove("hidden");
+                  } else {
+                        section.classList.add("collapsed");
+                        btnCollapse.classList.add("hidden");
+                        btnExpand.classList.remove("hidden");
+                  }
+            }
+
+            // Ẩn hiện danh sách các Tòa thành AI
+            function toggleCastle(show) {
+                  const section = document.getElementById("castle-section");
+                  const btnExpand = document.getElementById("btnExpandCastle");
+                  const btnCollapse = document.getElementById("btnCollapseCastle");
+
+                  if (show) {
+                        section.classList.remove("collapsed"); // ✅ hiển thị -> bỏ collapsed
+                        btnExpand.classList.add("hidden");
+                        btnCollapse.classList.remove("hidden");
+                  } else {
+                        section.classList.add("collapsed"); // ✅ ẩn -> thêm collapsed
+                        btnCollapse.classList.add("hidden");
+                        btnExpand.classList.remove("hidden");
+                  }
+            }
+
+
+            // Mở Popup thêm đội
+            function openTeamModal() {
+                  document.getElementById("teamModal").classList.remove("hidden");
+            }
+
+            function closeTeamModal() {
+                  document.getElementById("teamModal").classList.add("hidden");
+                  document.getElementById("teamNameInput").value = "";
+                  document.getElementById("teamAvatarInput").value = "";
+                  document.getElementById("avatarPreview").classList.add("hidden");
+            }
+
+            document.getElementById("teamAvatarInput").addEventListener("change", function (event) {
+                  const reader = new FileReader();
+                  reader.onload = function (e) {
+                        const avatar = e.target.result;
+                        const img = document.getElementById("avatarPreview");
+                        img.src = avatar;
+                        img.classList.remove("hidden");
+                  };
+                  reader.readAsDataURL(event.target.files[0]);
+            });
+
+            function confirmAddTeam() {
+                  console.log(teams.length)
+                  if (teams.length >= 5) {
+                        showToastFailed("Đã đạt tối đa 5 đội chơi.");
+                        closeTeamModal();
+                        return;
+                  }
+                  const name = document.getElementById("teamNameInput").value.trim();
+                  const fileInput = document.getElementById("teamAvatarInput");
+                  if (!name || !fileInput.files.length) {
+                        showToastFailed("Vui lòng nhập tên và chọn ảnh đại diện.");
+                        return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = function (e) {
+                        const avatar = e.target.result;
+                        const id = Date.now();
+                        let soldiers = { hauphuong: 300, tientuyen: 150, congnghe: 100 };
+                        // Thêm 1 biến tổng quân nữa totalSoldiers
+                        let totalSoldiers = soldiers.hauphuong + soldiers.tientuyen + soldiers.congnghe;
+                        let strength = soldiers.hauphuong * 1 + soldiers.tientuyen * 2 + soldiers.congnghe * 3;
+                        let allianceTickets = 3;
+                        let glory = 0;
+                        let newTeam = {
+                              id,
+                              name,
+                              avatar,
+                              soldiers,
+                              totalSoldiers,
+                              strength,
+                              allianceTickets,
+                              glory,
+                        };
+                        teams.push(newTeam);
+                        renderTeams();
+                        saveTeams();
+                        showToastSuccess("Đã thêm đội thành công!");
+                        closeTeamModal();
+                  };
+                  reader.readAsDataURL(fileInput.files[0]);
+            }
+
+            function renderTeams() {
+                  const container = document.getElementById("teams-container");
+                  container.innerHTML = "";
+                  teams.forEach(team => {
+                        const div = document.createElement("div");
+                        div.className = "p-4 bg-white shadow rounded relative";
+                        div.innerHTML = `
+  <div class="relative p-4 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-200">
+    <!-- Nút xóa -->
+    <button onclick="deleteTeam(${team.id})"
+            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition text-lg"
+            title="Xoá đội">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <!-- Nội dung đội -->
+    <div class="flex gap-4 items-center">
+      <!-- Avatar giữa -->
+      <img src="${team.avatar}" alt="Avatar đội"
+           class="w-20 h-20 rounded-full object-cover border-2 border-blue-400 shadow" />
+
+      <div class="flex-1">
+        <h4 class="text-lg font-bold text-gray-800 mb-3">Đội: ${team.name}</h4>
+        <table class="w-full text-sm border border-gray-300 rounded overflow-hidden">
+          <tbody>
+            <tr class="border-b border-gray-200">
+              <td class="py-1 px-2">🏹 Hậu Phương:</td>
+              <td class="text-blue-700 font-medium">${team.soldiers.hauphuong}</td>
+              <td class="py-1 px-2">💪 Sức Mạnh:</td>
+              <td class="text-green-600 font-semibold">${team.strength} điểm</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <td class="py-1 px-2">⚔️ Tiền Tuyến:</td>
+              <td class="text-red-600 font-medium">${team.soldiers.tientuyen}</td>
+              <td class="py-1 px-2">🤝 Liên Minh:</td>
+              <td class="text-yellow-600 font-medium">${team.allianceTickets} phiếu</td>
+            </tr>
+            <tr class="border-b border-gray-200">
+              <td class="py-1 px-2">🤖 Công Nghệ:</td>
+              <td class="text-purple-700 font-medium">${team.soldiers.congnghe}</td>
+              <td class="py-1 px-2">🏆 Vinh Quang:</td>
+              <td class="text-orange-500 font-medium">${team.glory} điểm</td>
+            </tr>
+            <tr>
+              <td class="py-1 px-2">🪖 Tổng Số Quân:</td>
+              <td colspan="3" class="font-bold">${team.totalSoldiers}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+`;
+                        container.appendChild(div);
+                  });
+            }
+
+            function deleteTeam(id) {
+                  teams = teams.filter(team => team.id !== id);
+                  saveTeams();
+                  renderTeams();
+                  showToastSuccess("Đã xoá đội thành công");
+            }
+
+            function saveTeams() {
+                  localStorage.setItem("dau-truong-ai-teams", JSON.stringify(teams));
+            }
+
+            function resetTeams() {
+                  if (confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu các đội?")) {
+                        localStorage.removeItem("dau-truong-ai-teams");
+                        teams = [];
+                        renderTeams();
+                        showToastSuccess("Đã reset toàn bộ đội thành công.");
+                  }
+            }
+
+            function loadTeamsFromStorage() {
+                  const stored = localStorage.getItem("dau-truong-ai-teams");
+                  if (stored) {
+                        teams = JSON.parse(stored);
+                        renderTeams();
+                  }
+            }
+
+            // Phần setup Thành AI =====================================================================================
+            let castles = [];
+
+            function openCastleModal() {
+                  document.getElementById("castleModal").classList.remove("hidden");
+            }
+
+            function closeCastleModal() {
+                  document.getElementById("castleModal").classList.add("hidden");
+                  document.getElementById("castleNameInput").value = "";
+                  document.getElementById("castleGloryInput").value = "";
+                  document.getElementById("castleCaptureInput").value = "";
+                  document.getElementById("castleRoundInput").value = "";
+            }
+            function confirmAddCastle() {
+                  const name = document.getElementById("castleNameInput").value.trim();
+                  const gloryPoint = parseInt(document.getElementById("castleGloryInput").value);
+                  const maxCaptures = parseInt(document.getElementById("castleCaptureInput").value);
+                  const appearsAtRound = document.getElementById("castleRoundInput").value || null;
+
+                  if (!name || !gloryPoint || !maxCaptures || maxCaptures < 1 || maxCaptures > 5) {
+                        showToastFailed("Vui lòng nhập đúng thông tin!");
+                        return;
+                  }
+
+                  const castle = {
+                        id: Date.now(),
+                        name,
+                        gloryPoint,
+                        maxCaptures,
+                        appearsAtRound: appearsAtRound ? parseInt(appearsAtRound) : null
+                  };
+
+                  castles.push(castle);
+                  saveCastles();
+                  renderCastles();
+                  showToastSuccess("Đã thêm tòa thành!");
+                  closeCastleModal();
+            }
+            function renderCastles() {
+                  const list = document.getElementById("castle-list");
+                  list.innerHTML = "";
+
+                  castles.forEach(c => {
+                        const div = document.createElement("div");
+                        div.className = "p-4 bg-gray-50 rounded shadow border relative";
+
+                        div.innerHTML = `
+      <button onclick="deleteCastle(${c.id})"
+              class="absolute top-2 right-2 text-gray-400 hover:text-red-600 text-lg">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 class="text-lg font-bold text-gray-800 mb-2">🏰 ${c.name}</h3>
+      <p>🏆 Vinh quang: <span class="font-semibold text-orange-600">${c.gloryPoint}</span> điểm</p>
+      <p>🎯 Số lần chiếm: <span class="text-blue-600 font-medium">${c.maxCaptures}</span> lần</p>
+      <p>📍 Xuất hiện: ${c.appearsAtRound ? `Từ vòng ${c.appearsAtRound}` : "Từ đầu trận"}</p>
+    `;
+
+                        list.appendChild(div);
+                  });
+            }
+            function saveCastles() {
+                  localStorage.setItem("dau-truong-ai-castles", JSON.stringify(castles));
+            }
+
+            function loadCastlesFromStorage() {
+                  const stored = localStorage.getItem("dau-truong-ai-castles");
+                  if (stored) {
+                        castles = JSON.parse(stored);
+                        renderCastles();
+                  }
+            }
+
+            function deleteCastle(id) {
+                  castles = castles.filter(c => c.id !== id);
+                  saveCastles();
+                  renderCastles();
+                  showToastSuccess("Đã xoá tòa thành");
+            }
+
+            function resetCastles() {
+                  if (confirm("Bạn có chắc chắn muốn xoá toàn bộ tòa thành?")) {
+                        localStorage.removeItem("dau-truong-ai-castles");
+                        castles = [];
+                        renderCastles();
+                        showToastSuccess("Đã reset danh sách tòa thành.");
+                  }
+            }
+
+
+            // Phần 2 Ghi nhận quân đội di chuyển vào các tòa thành ===============================================
+            // Tạo các bảng nhập liệu quân vào từng thành
+            function generateCastleBattleTable(castle) {
+                  const table = document.createElement("table");
+                  table.className = "w-full mb-4 border-2 border-gray-300 rounded bg-white text-sm shadow table-fixed";
+
+                  const thead = `
+    <thead class="bg-blue-100">
+      <tr>
+        <th class="px-2 py-1 text-center w-[30%]">Tên Đội</th>
+        <th class="px-2 py-1 text-center w-[15%]">🏹 Hậu Phương</th>
+        <th class="px-2 py-1 text-center w-[15%]">⚔️ Tiền Tuyến</th>
+        <th class="px-2 py-1 text-center w-[15%]">🤖 Công Nghệ</th>
+        <th class="px-2 py-1 text-center w-[25%]">Tổng Sức Mạnh</th>
+      </tr>
+    </thead>
+  `;
+
+                  const rows = [];
+                  for (let i = 0; i < 5; i++) {
+                        const teamOptions = `<option value="">-- Không chọn --</option>` +
+                              teams.map(team => `<option value="${team.id}">${team.name}</option>`).join("");
+
+                        rows.push(`
+      <tr>
+        <td class="w-[30%]"><select class="team-select border-2 rounded px-1 py-0.5 w-full">${teamOptions}</select></td>
+        <td class="w-[15%]"><input type="number" class="hauphuong-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
+        <td class="w-[15%]"><input type="number" class="tientuyen-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
+        <td class="w-[15%]"><input type="number" class="congnghe-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
+        <td class="w-[25%] total-strength text-center font-bold">0</td>
+      </tr>
+    `);
+                  }
+
+                  table.innerHTML = `
+    <caption class="text-md font-semibold py-2">🏰 ${castle.name} || 🏆 Vinh quang: ${castle.gloryPoint} || 🎯 Số lần chiếm: ${castle.maxCaptures}</caption>
+    ${thead}
+    <tbody>${rows.join("")}</tbody>
+  `;
+
+                  return table;
+            }
+
+
+            // Tính tổng sức mạnh tự động
+            function attachStrengthCalculator(container) {
+                  container.addEventListener("input", e => {
+                        const row = e.target.closest("tr");
+                        if (!row) return;
+                        const hau = parseInt(row.querySelector(".hauphuong-input")?.value || 0);
+                        const tien = parseInt(row.querySelector(".tientuyen-input")?.value || 0);
+                        const cong = parseInt(row.querySelector(".congnghe-input")?.value || 0);
+                        const total = hau * 1 + tien * 2 + cong * 3;
+                        row.querySelector(".total-strength").textContent = total;
+                  });
+            }
+
+
+            // Logic phân trang bằng JavaScript
+            let currentRound = 1;
+            const totalRounds = 7;
+
+            // Tạo bảng theo từng vòng (dạng phân trang)
+            function renderRoundPage(round) {
+                  const container = document.getElementById("round-content");
+
+                  // Bắt đầu hiệu ứng fade-out
+                  container.classList.add("fade-out");
+
+                  setTimeout(() => {
+                        // Sau 300ms mới thay đổi nội dung
+                        container.innerHTML = "";
+
+                        const title = document.getElementById("roundTitle");
+                        title.textContent = `🌀 VÒNG CHƠI SỐ ${round}`;
+
+                        // Thành nào có appearsAtRound <= round thì sẽ hiển thị (tồn tại liên tục từ đó đến vòng 7)
+                        const currentCastles = castles.filter(c => {
+                              const appearRound = parseInt(c.appearsAtRound) || 1; // Nếu không có, mặc định là vòng 1
+                              return appearRound <= round;
+                        });
+
+                        currentCastles.forEach(castle => {
+                              const table = generateCastleBattleTable(castle);
+                              container.appendChild(table);
+                        });
+
+                        attachStrengthCalculator(container);
+
+                        // Kết thúc fade-out, bắt đầu fade-in
+                        container.classList.remove("fade-out");
+
+                        // Vô hiệu hóa nút khi đến giới hạn
+                        document.getElementById("prevRoundBtn").disabled = round === 1;
+                        document.getElementById("nextRoundBtn").disabled = round === totalRounds;
+
+                  }, 300); // delay khớp với transition trong CSS
+            }
+
+
+            function prevRound() {
+                  if (currentRound > 1) {
+                        currentRound--;
+                        renderRoundPage(currentRound);
+                  }
+            }
+
+            function nextRound() {
+                  if (currentRound < totalRounds) {
+                        currentRound++;
+                        renderRoundPage(currentRound);
+                  }
+            }
+
+            window.onload = function () {
+                  loadTeamsFromStorage();
+                  loadCastlesFromStorage();
+                  renderRoundPage(currentRound);
+            };
+
+
+      </script>
+</body>
+
+</html>

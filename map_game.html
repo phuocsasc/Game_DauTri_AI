@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Bản đồ Game Tam Giác AI</title>
+      <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+      <style>
+            :root {
+                  --blue: #3498db;
+                  --green: #2ecc71;
+                  --pink: #ff9ff3;
+                  --red: #e74c3c;
+                  --dark-blue: #2980b9;
+                  --dark-green: #27ae60;
+                  --dark-pink: #f368e0;
+                  --dark-red: #c0392b;
+            }
+
+            body {
+                  background: linear-gradient(135deg, #f5f7fa 0%, #dfe6e9 100%);
+                  margin: 0;
+                  padding: 0;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  min-height: 100vh;
+                  font-family: 'Roboto', sans-serif;
+            }
+
+            h1 {
+                  color: #d66d30;
+                  text-align: center;
+                  margin: 20px 0;
+                  font-size: 2.5rem;
+                  font-weight: 700;
+                  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .game-container {
+                  /* width: 100%;
+                  max-width: 700px; */
+                  margin: 0 auto;
+                  position: relative;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+            }
+
+            .map-container {
+                  position: relative;
+                  width: 100%;
+                  min-width: 900px;
+                  padding: 0 10px;
+                  height: 0px;
+                  padding-bottom: 100%;
+                  background: white;
+                  border-radius: 20px;
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                  overflow: hidden;
+            }
+
+            .node {
+                  position: absolute;
+                  min-width: 50px;
+                  height: 50px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  border-radius: 12px;
+                  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                  transition: all 0.3s ease;
+                  cursor: pointer;
+                  z-index: 10;
+                  border: 3px solid white;
+                  padding: 0 5px;
+            }
+
+            .node:hover {
+                  transform: scale(1.1);
+                  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            }
+
+            .node-blue {
+                  background: var(--blue);
+                  border-color: var(--dark-blue);
+            }
+
+            .node-green {
+                  background: var(--green);
+                  border-color: var(--dark-green);
+            }
+
+            .node-pink {
+                  background: var(--pink);
+                  border-color: var(--dark-pink);
+            }
+
+            .node-center {
+                  background: var(--red);
+                  border-color: var(--dark-red);
+                  border-radius: 50%;
+                  width: 40px;
+                  height: 40px;
+                  animation: pulse 2s infinite;
+            }
+
+            svg {
+                  position: absolute;
+                  width: 100%;
+                  height: 100%;
+                  top: 0;
+                  left: 0;
+                  pointer-events: none;
+                  z-index: 1;
+            }
+
+            line {
+                  stroke: #7f8c8d;
+                  stroke-width: 2;
+                  stroke-linecap: round;
+                  stroke-dasharray: 10, 5;
+                  animation: dash 1s linear infinite;
+            }
+
+            /* .node-icon {
+                  width: 60%;
+                  height: 60%;
+                  object-fit: contain;
+                  filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+            } */
+
+            .node-tooltip {
+                  position: absolute;
+                  background: rgba(0, 0, 0, 0.8);
+                  color: white;
+                  padding: 5px 10px;
+                  border-radius: 5px;
+                  font-size: 0.9rem;
+                  white-space: nowrap;
+                  z-index: 100;
+                  pointer-events: none;
+                  opacity: 0;
+                  transition: opacity 0.3s;
+                  transform: translateY(10px);
+            }
+
+            @keyframes dash {
+                  to {
+                        stroke-dashoffset: -15;
+                  }
+            }
+
+            @keyframes pulse {
+                  0% {
+                        transform: scale(1);
+                  }
+
+                  50% {
+                        transform: scale(1.1);
+                  }
+
+                  100% {
+                        transform: scale(1);
+                  }
+            }
+
+            
+      </style>
+</head>
+
+<body>
+      <h1>Bản đồ Game Đấu Trí AI</h1>
+
+      <div class="game-container">
+            <div class="map-container" id="map">
+                  <svg id="lines"></svg>
+
+                  <!-- 3 node xanh dương ở đỉnh tam giác -->
+                  <div class="node node-blue" id="n1" titles="Node 1">
+                        <!-- <img src="https://cdn-icons-png.flaticon.com/512/10691/10691809.png" class="node-icon"
+                              alt="Đỉnh"> -->
+                        Gemini 1
+                  </div>
+                  <div class="node node-blue" id="n2" titles="Node 2">
+                        Gemini 2
+                  </div>
+                  <div class="node node-blue" id="n3" titles="Node 3">
+                        Gemini 3
+                  </div>
+
+                  <!-- 3 node xanh lá ở giữa cạnh -->
+                  <div class="node node-green" id="n4" titles="Node 4">
+                        ChatGPT 1
+                  </div>
+                  <div class="node node-green" id="n5" titles="Node 5">
+                        ChatGPT 2
+                  </div>
+                  <div class="node node-green" id="n6" titles="Node 6">
+                        ChatGPT 3
+                  </div>
+
+                  <!-- 3 node hồng bên trong -->
+                  <div class="node node-pink" id="n7" titles="Node 7">
+                        Copilot 1
+                  </div>
+                  <div class="node node-pink" id="n8" titles="Node 8">
+                        Copilot 2
+                  </div>
+                  <div class="node node-pink" id="n9" titles="Node 9">
+                        Copilot 3
+                  </div>
+
+                  <!-- Node trung tâm -->
+                  <div class="node node-center" id="center" titles="Trung tâm điều khiển"></div>
+            </div>
+      </div>
+
+      <script>
+            // Định nghĩa vị trí các node
+            function positionNodes() {
+                  const container = document.getElementById('map');
+                  const width = container.offsetWidth;
+                  const height = container.offsetHeight;
+
+                  // 3 node đỉnh tam giác
+                  document.getElementById('n1').style.left = `${width / 2 - 25}px`;
+                  document.getElementById('n1').style.top = '20px';
+
+                  document.getElementById('n2').style.left = '20px';
+                  document.getElementById('n2').style.top = `${height - 300}px`;
+
+                  document.getElementById('n3').style.left = `${width - 95}px`;
+                  document.getElementById('n3').style.top = `${height - 300}px`;
+
+                  // 3 node giữa cạnh
+                  document.getElementById('n4').style.left = `${width / 4 - 25}px`;
+                  document.getElementById('n4').style.top = `${height / 2 - 200}px`;
+
+                  document.getElementById('n5').style.left = `${width * 3 / 4 - 25}px`;
+                  document.getElementById('n5').style.top = `${height / 2 - 200}px`;
+
+                  document.getElementById('n6').style.left = `${width / 2 - 25}px`;
+                  document.getElementById('n6').style.top = `${height - 300}px`;
+
+                  // 3 node bên trong
+                  document.getElementById('n7').style.left = `${width / 2 - 25}px`;
+                  document.getElementById('n7').style.top = `${height / 3 - 50}px`;
+
+                  document.getElementById('n8').style.left = `${width / 3 - 25}px`;
+                  document.getElementById('n8').style.top = `${height * 2 / 3 - 150}px`;
+
+                  document.getElementById('n9').style.left = `${width * 2 / 3 - 25}px`;
+                  document.getElementById('n9').style.top = `${height * 2 / 3 - 150}px`;
+
+                  // Node trung tâm
+                  document.getElementById('center').style.left = `${width / 2 - 16}px`;
+                  document.getElementById('center').style.top = `${height / 2 - 80}px`;
+            }
+
+            // Kết nối giữa các node
+            const connections = [
+                  { from: 'n1', to: 'n4', color: '#3498db' },
+                  { from: 'n1', to: 'n5', color: '#3498db' },
+                  // { from: 'n1', to: 'n7', color: '#3498db' },
+                  { from: 'n2', to: 'n4', color: '#3498db' },
+                  { from: 'n2', to: 'n6', color: '#3498db' },
+                  { from: 'n3', to: 'n5', color: '#3498db' },
+                  { from: 'n3', to: 'n6', color: '#3498db' },
+                  { from: 'n4', to: 'n7', color: '#2ecc71' },
+                  { from: 'n5', to: 'n7', color: '#2ecc71' },
+                  { from: 'n4', to: 'n8', color: '#2ecc71' },
+                  { from: 'n6', to: 'n8', color: '#2ecc71' },
+                  { from: 'n5', to: 'n9', color: '#2ecc71' },
+                  { from: 'n6', to: 'n9', color: '#2ecc71' },
+                  { from: 'n6', to: 'center', color: '#ff9ff3' },
+                  { from: 'n7', to: 'center', color: '#ff9ff3' },
+                  { from: 'n8', to: 'center', color: '#ff9ff3' },
+                  { from: 'n9', to: 'center', color: '#ff9ff3' }
+            ];
+
+            // Vẽ các đường kết nối
+            function drawLines() {
+                  const svg = document.getElementById('lines');
+                  svg.innerHTML = '';
+
+                  connections.forEach(conn => {
+                        const from = document.getElementById(conn.from);
+                        const to = document.getElementById(conn.to);
+
+                        if (from && to) {
+                              const fromRect = from.getBoundingClientRect();
+                              const toRect = to.getBoundingClientRect();
+                              const parentRect = svg.getBoundingClientRect();
+
+                              const x1 = fromRect.left + fromRect.width / 2 - parentRect.left;
+                              const y1 = fromRect.top + fromRect.height / 2 - parentRect.top;
+                              const x2 = toRect.left + toRect.width / 2 - parentRect.left;
+                              const y2 = toRect.top + toRect.height / 2 - parentRect.top;
+
+                              const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                              line.setAttribute('x1', x1);
+                              line.setAttribute('y1', y1);
+                              line.setAttribute('x2', x2);
+                              line.setAttribute('y2', y2);
+                              line.setAttribute('stroke', conn.color);
+                              svg.appendChild(line);
+                        }
+                  });
+            }
+
+            // Thêm tooltip cho các node
+            function initTooltips() {
+                  const tooltip = document.createElement('div');
+                  tooltip.className = 'node-tooltip';
+                  document.body.appendChild(tooltip);
+
+                  document.querySelectorAll('.node').forEach(node => {
+                        node.addEventListener('mouseenter', (e) => {
+                              const title = node.getAttribute('titles');
+                              if (title) {
+                                    tooltip.textContent = title;
+                                    tooltip.style.left = `${e.pageX + 10}px`;
+                                    tooltip.style.top = `${e.pageY + 10}px`;
+                                    tooltip.style.opacity = '1';
+                                    tooltip.style.transform = 'translateY(0)';
+                              }
+                        });
+
+                        node.addEventListener('mouseleave', () => {
+                              tooltip.style.opacity = '0';
+                              tooltip.style.transform = 'translateY(10px)';
+                        });
+
+                        node.addEventListener('mousemove', (e) => {
+                              tooltip.style.left = `${e.pageX + 10}px`;
+                              tooltip.style.top = `${e.pageY + 10}px`;
+                        });
+                  });
+            }
+
+            // Khởi tạo
+            window.addEventListener('load', () => {
+                  positionNodes();
+                  drawLines();
+                  initTooltips();
+            });
+
+            window.addEventListener('resize', () => {
+                  positionNodes();
+                  drawLines();
+            });
+      </script>
+</body>
+
+</html>
