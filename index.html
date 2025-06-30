@@ -233,6 +233,50 @@
                   </div>
             </div>
 
+            <!-- Modal Xem kết quả vòng chơi bằng popup -->
+            <div id="roundResultModal"
+                  class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex justify-center items-center">
+                  <div class="bg-white rounded-xl max-w-2xl w-full relative"
+                        style="max-height: 80vh; overflow-y: auto;">
+                        <!-- Tiêu đề cố định -->
+                        <div id="popupRoundTitle" class="border-b p-4 sticky top-0 bg-white z-10">
+
+                        </div>
+
+                        <!-- Nội dung cuộn -->
+                        <div id="roundResultContent" class="p-4 max-h-[70vh] overflow-y-auto">
+                              <!-- Kết quả sẽ được inject ở đây -->
+                        </div>
+                  </div>
+            </div>
+
+            <!-- Popup xác nhận trừ quân thủ công -->
+            <div id="manualDeductModal"
+                  class="fixed inset-0 bg-black bg-opacity-50 hidden z-40 flex justify-center items-center">
+                  <div class="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] flex flex-col">
+
+                        <h3 class="text-xl font-bold text-blue-700 mb-4">⚔️ Nhập số quân cần loại bỏ</h3>
+
+                        <!-- Nội dung chính có thể cuộn -->
+                        <div id="manualDeductContent" class="flex flex-wrap gap-4 overflow-y-auto pr-2"
+                              style="max-height: 60vh;">
+                              <!-- Các bảng đội sẽ được thêm ở đây -->
+                        </div>
+
+                        <!-- Nút điều khiển giữ nguyên bên dưới -->
+                        <div class="flex justify-end gap-3 mt-4">
+                              <button onclick="submitManualDeduction()"
+                                    class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">💾 Xác
+                                    nhận</button>
+                              <button onclick="closeManualDeductModal()"
+                                    class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">❌ Hủy</button>
+                        </div>
+                  </div>
+            </div>
+
+
+
+
 
       </div>
 
@@ -358,6 +402,12 @@
                   teams.forEach(team => {
                         const div = document.createElement("div");
                         div.className = "p-4 bg-white shadow rounded relative";
+                        // ✅ Thêm class nếu đội bị loại
+                        const extraClass = team.eliminated ? "opacity-50 border-red-400" : "border-gray-200";
+                        const eliminatedNotice = team.eliminated
+                              ? `<p class="text-red-600 font-semibold mt-2">💀 Đội này đã bị loại khỏi trận chiến!</p>`
+                              : "";
+
                         div.innerHTML = `
   <div class="relative p-4 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-200">
     <!-- Nút xóa -->
@@ -504,10 +554,21 @@
 
             function loadCastlesFromStorage() {
                   const stored = localStorage.getItem("dau-truong-ai-castles");
-                  if (stored) {
-                        castles = JSON.parse(stored);
-                        renderCastles();
+                  castles = stored ? JSON.parse(stored) : [];
+
+                  // Kiểm tra xem đã có "Thành Xuất Phát" chưa
+                  const hasStartCastle = castles.some(c => c.id === "start" || c.name === "Thành Xuất Phát");
+                  if (!hasStartCastle) {
+                        castles.unshift({
+                              id: "start",
+                              name: "Thành Xuất Phát",
+                              gloryPoint: 0,
+                              maxCaptures: 0,
+                              isDefault: true
+                        });
+                        saveCastles(); // Lưu lại nếu vừa thêm mới
                   }
+                  renderCastles(); // Cập nhật UI
             }
 
             function deleteCastle(id) {
@@ -603,6 +664,8 @@
                         const title = document.getElementById("roundTitle");
                         title.textContent = `🌀 VÒNG CHƠI SỐ ${round}`;
 
+                        const inputData = JSON.parse(localStorage.getItem(`round-input-${round}`) || "[]");
+
                         // Thành nào có appearsAtRound <= round thì sẽ hiển thị (tồn tại liên tục từ đó đến vòng 7)
                         const currentCastles = castles.filter(c => {
                               const appearRound = parseInt(c.appearsAtRound) || 1; // Nếu không có, mặc định là vòng 1
@@ -612,9 +675,40 @@
                         currentCastles.forEach(castle => {
                               const table = generateCastleBattleTable(castle);
                               container.appendChild(table);
+
+                              // ✅ Gán lại dữ liệu nhập
+                              const storedCastle = inputData.find(item => item.castleId === castle.id);
+                              if (storedCastle) {
+                                    const rows = table.querySelectorAll("tbody tr");
+                                    storedCastle.teamEntries.forEach((entry, index) => {
+                                          if (rows[index]) {
+                                                rows[index].querySelector(".team-select").value = entry.teamId;
+                                                rows[index].querySelector(".hauphuong-input").value = entry.hau;
+                                                rows[index].querySelector(".tientuyen-input").value = entry.tien;
+                                                rows[index].querySelector(".congnghe-input").value = entry.cong;
+                                                rows[index].querySelector(".total-strength").textContent = entry.totalStrength;
+                                          }
+                                    });
+                              }
                         });
 
                         attachStrengthCalculator(container);
+
+                        // ✅ Thêm các nút xử lý dưới bảng
+                        const btnGroup = document.createElement("div");
+                        btnGroup.className = "flex gap-4 justify-end my-4 col-span-2";
+                        btnGroup.innerHTML = `
+                              <button onclick="processRoundData(${round})" class="px-4 py-2 rounded-lg bg-green-600 text-white rounded hover:bg-green-700">
+                              ✅ Xử lý kết quả vòng ${round}
+                              </button>
+                              <button onclick="viewRoundResult(${round})" class="px-4 py-2 rounded-lg bg-blue-600 text-white rounded hover:bg-blue-700">
+                              📊 Xem kết quả vòng ${round}
+                              </button>
+                              <button onclick="resetRoundData(${round})" class="px-4 py-2 rounded-lg bg-red-600 text-white rounded hover:bg-red-700">
+                              ♻️ Reset kết quả Vòng ${round}
+                              </button>
+                        `;
+                        container.appendChild(btnGroup);
 
                         // Kết thúc fade-out, bắt đầu fade-in
                         container.classList.remove("fade-out");
@@ -626,6 +720,333 @@
                   }, 300); // delay khớp với transition trong CSS
             }
 
+            // Xóa data từng vòng
+            function resetRoundData(round) {
+                  if (!confirm(`Bạn có chắc chắn muốn reset toàn bộ dữ liệu của vòng ${round}?`)) return;
+                  localStorage.removeItem(`round-result-${round}`);
+                  localStorage.removeItem(`round-input-${round}`);
+                  renderRoundPage(round);
+                  showToastSuccess(`Đã reset dữ liệu vòng ${round}`);
+            }
+
+            // Hiển thi popup trừ quân khi giao tranh thất bại
+            function showManualDeductionPopup() {
+                  const container = document.getElementById("manualDeductContent");
+                  container.innerHTML = "";
+
+                  window.manualDeductionQueue.forEach((entry, idx) => {
+                        const team = teams.find(t => t.id == entry.teamId);
+                        container.innerHTML += `
+                              <div class="p-4 border rounded shadow">
+                              <p class="mb-2 font-semibold text-gray-800">
+                              💀 Đội <strong>${team.name}</strong> tại thành <strong>${entry.castleName}</strong><br>
+                              ➖ Cần loại quân có tổng sức mạnh = <strong>${entry.glory}</strong>
+                              </p>
+                              <div class="grid grid-cols-3 gap-2">
+                              <div>
+                                    <label>Hậu Phương</label>
+                                    <input type="number" class="form-input w-full border px-2 py-1" min="0" data-team="${team.id}" data-key="${team.id}-${entry.castleName}" data-type="hauphuong">
+                              </div>
+                              <div>
+                                    <label>Tiền Tuyến</label>
+                                    <input type="number" class="form-input w-full border px-2 py-1" min="0" data-team="${team.id}" data-key="${team.id}-${entry.castleName}" data-type="tientuyen">
+                              </div>
+                              <div>
+                                    <label>Công Nghệ</label>
+                                    <input type="number" class="form-input w-full border px-2 py-1" min="0" data-team="${team.id}" data-key="${team.id}-${entry.castleName}" data-type="congnghe">
+                              </div>
+                              </div>
+                              </div>
+                        `;
+                  });
+
+                  document.getElementById("manualDeductModal").classList.remove("hidden");
+            }
+
+            function submitManualDeduction() {
+                  const inputs = document.querySelectorAll("#manualDeductContent input");
+                  const deductionInputs = {}; // key = `${teamId}-${castleName}`
+
+                  // Bước 1: Thu thập dữ liệu từ các ô input
+                  inputs.forEach(input => {
+                        const key = input.dataset.key; // teamId-castleName
+                        const type = input.dataset.type; // hauphuong, tientuyen, congnghe
+                        const value = parseInt(input.value || 0);
+
+                        if (!deductionInputs[key]) {
+                              deductionInputs[key] = { hauphuong: 0, tientuyen: 0, congnghe: 0 };
+                        }
+
+                        deductionInputs[key][type] = value;
+                  });
+
+                  // Bước 2: Kiểm tra hợp lệ toàn bộ trước khi trừ quân
+                  let isValid = true;
+                  const errors = [];
+
+                  window.manualDeductionQueue.forEach(entry => {
+                        const key = `${entry.teamId}-${entry.castleName}`;
+                        const deduction = deductionInputs[key];
+                        const strength = deduction.hauphuong * 1 + deduction.tientuyen * 2 + deduction.congnghe * 3;
+
+                        if (strength !== entry.glory) {
+                              isValid = false;
+                              errors.push(`⚠️ Đội ${entry.teamName} tại ${entry.castleName} cần tổng sức mạnh = ${entry.glory}, hiện tại là ${strength}`);
+                        }
+                  });
+
+                  if (!isValid) {
+                        showToastFailed(errors.join("<br>"));
+                        return;
+                  }
+
+                  // Bước 3: Nếu hợp lệ → Trừ quân thật sự
+                  window.manualDeductionQueue.forEach(entry => {
+                        const team = teams.find(t => t.id == entry.teamId);
+                        const key = `${entry.teamId}-${entry.castleName}`;
+                        const deduction = deductionInputs[key];
+
+                        team.soldiers.hauphuong = Math.max(0, team.soldiers.hauphuong - deduction.hauphuong);
+                        team.soldiers.tientuyen = Math.max(0, team.soldiers.tientuyen - deduction.tientuyen);
+                        team.soldiers.congnghe = Math.max(0, team.soldiers.congnghe - deduction.congnghe);
+
+                        const total = team.soldiers.hauphuong + team.soldiers.tientuyen + team.soldiers.congnghe;
+                        team.totalSoldiers = total;
+                        team.strength = team.soldiers.hauphuong * 1 + team.soldiers.tientuyen * 2 + team.soldiers.congnghe * 3;
+
+                        if (total === 0) team.eliminated = true;
+                  });
+
+                  saveTeams();
+                  renderTeams();
+                  document.getElementById("manualDeductModal").classList.add("hidden");
+                  showToastSuccess("✅ Đã cập nhật trừ quân thủ công thành công.");
+            }
+
+
+
+            // Hàm chính xữ lý sự kiện click ✅ Xử lý kết quả vòng
+            function processRoundData(round) {
+                  const tables = document.querySelectorAll("#round-content table");
+                  const roundData = [];
+                  const inputData = [];
+
+                  window.manualDeductionQueue = []; // Dùng biến toàn cục để chia sẻ cho popup
+                  const addedTeams = new Set(); // Đảm bảo không trùng đội
+
+                  tables.forEach(table => {
+                        const { castle, teamEntries } = extractCastleDataFromTable(table);
+                        if (!castle || castle.id === "start") return; // Bỏ qua Thành Xuất Phát
+
+                        // ✅ Luôn lưu lại dữ liệu input dù có giao chiến hay không
+                        inputData.push({ castleId: castle.id, teamEntries });
+
+                        // Nếu thành đã hết lượt chiếm, không có giao chiến
+                        if (castle.maxCaptures <= 0) {
+                              roundData.push({
+                                    castleId: castle.id,
+                                    castleName: castle.name,
+                                    glory: castle.gloryPoint,
+                                    winner: null,
+                                    losers: [],
+                                    troops: teamEntries,
+                                    message: "⛔ Tòa thành đã hết lượt chiếm - không còn xảy ra giao tranh."
+                              });
+                              return;
+                        }
+
+                        // ✅ Nếu còn lượt chiếm → xử lý giao tranh
+                        const result = calculateBattleResult(castle, teamEntries);
+                        roundData.push(result);
+
+                        // ✅ Nếu có đội thất bại thì đưa vào danh sách cần nhập số quân để trừ
+                        if (result.winner !== null) {
+                              result.troops.forEach(troop => {
+                                    const isLoser = result.winner !== troop.teamId;
+                                    const joinedBattle = troop.hau > 0 && troop.tien > 0 && troop.cong > 0;
+                                    const key = `${troop.teamId}-${castle.id}`;
+
+                                    if (isLoser && joinedBattle && !addedTeams.has(key)) {
+                                          const team = teams.find(t => t.id == troop.teamId);
+                                          if (team && !team.eliminated) {
+                                                window.manualDeductionQueue.push({
+                                                      teamId: team.id,
+                                                      teamName: team.name,
+                                                      castleName: result.castleName,
+                                                      glory: result.glory
+                                                });
+                                                addedTeams.add(key);
+                                          }
+                                    }
+                              });
+                        }
+                  });
+
+                  if (roundData.length === 0) {
+                        showToastFailed("Không có dữ liệu nào để xử lý vòng này.");
+                        return;
+                  }
+
+                  // ✅ Lưu dữ liệu trước khi popup hiện ra
+                  localStorage.setItem(`round-result-${round}`, JSON.stringify(roundData));
+                  localStorage.setItem(`round-input-${round}`, JSON.stringify(inputData));
+
+                  // ✅ Cập nhật UI và localStorage
+                  saveCastles();
+                  saveTeams();
+                  renderTeams();
+                  renderCastles();
+                  renderRoundPage(currentRound);
+
+                  // ✅ Hiện popup để người dùng nhập số quân bị loại nếu có
+                  if (manualDeductionQueue.length > 0) {
+                        window.pendingManualDeductionRound = round;
+                        window.pendingManualDeductionQueue = manualDeductionQueue;
+                        showManualDeductionPopup(manualDeductionQueue);
+                  } else {
+                        showToastSuccess(`✅ Đã xử lý kết quả vòng ${round}`);
+                  }
+            }
+
+
+            // Hàm phụ: Trích xuất dữ liệu từ bảng thành
+            function extractCastleDataFromTable(table) {
+                  const captionText = table.caption.textContent;
+                  const castleName = captionText.split("||")[0].replace("🏰", "").trim();
+                  const castle = castles.find(c => c.name.trim() === castleName);
+                  if (!castle) return { castle: null, teamEntries: [] };
+
+                  const rows = table.querySelectorAll("tbody tr");
+                  const teamEntries = [];
+
+                  rows.forEach(row => {
+                        const teamId = row.querySelector(".team-select").value;
+                        if (!teamId) return;
+
+                        const hau = parseInt(row.querySelector(".hauphuong-input").value || 0);
+                        const tien = parseInt(row.querySelector(".tientuyen-input").value || 0);
+                        const cong = parseInt(row.querySelector(".congnghe-input").value || 0);
+
+                        teamEntries.push({
+                              teamId,
+                              hau,
+                              tien,
+                              cong,
+                              totalStrength: hau * 1 + tien * 2 + cong * 3
+                        });
+                  });
+
+                  return { castle, teamEntries };
+            }
+            // Hàm phụ: Tính kết quả giao tranh tại 1 thành
+            function calculateBattleResult(castle, teamEntries) {
+                  // Lọc các đội có đủ 3 loại quân
+                  const qualified = teamEntries.filter(t => t.hau > 0 && t.tien > 0 && t.cong > 0);
+
+                  const result = {
+                        castleId: castle.id,
+                        castleName: castle.name,
+                        glory: castle.gloryPoint,
+                        winner: null,
+                        losers: [],
+                        troops: teamEntries,
+                        message: ""
+                  };
+
+                  if (qualified.length === 0) {
+                        result.message = "⛔ Không đội nào đủ cả 3 loại quân – không có giao tranh.";
+                        return result;
+                  }
+
+                  // Tính điểm sức mạnh cho các đội hợp lệ
+                  qualified.forEach(t => {
+                        t.totalStrength = t.hau * 1 + t.tien * 2 + t.cong * 3;
+                  });
+
+                  // Sắp xếp giảm dần theo sức mạnh
+                  qualified.sort((a, b) => b.totalStrength - a.totalStrength);
+                  const top = qualified[0];
+
+                  // Kiểm tra có bị hòa không
+                  const tie = qualified.filter(t => t.totalStrength === top.totalStrength);
+                  if (tie.length === 1) {
+                        // ✅ Có 1 đội mạnh nhất → thắng
+                        result.winner = top.teamId;
+                        castle.maxCaptures = Math.max(0, castle.maxCaptures - 1);
+
+                        const team = teams.find(t => t.id == top.teamId);
+                        if (team) {
+                              team.glory += castle.gloryPoint;
+                        }
+
+                        result.message = `✅ Đội ${team?.name || top.teamId} chiến thắng tại ${castle.name} `;
+
+                        // Xác định danh sách các đội thua (có tham gia giao tranh)
+                        result.losers = qualified
+                              .filter(t => t.teamId !== result.winner)
+                              .map(t => t.teamId);
+
+                  } else {
+                        // ❌ Hòa – không ai thắng
+                        result.message = "⚔️ Nhiều đội có cùng điểm sức mạnh cao nhất – không ai chiếm thành.";
+                  }
+
+                  saveTeams();
+                  return result;
+            }
+
+
+
+            // Hàm chính xử lý sự kiện click 📊 Xem kết quả vòng
+            function viewRoundResult(round) {
+                  const data = localStorage.getItem(`round-result-${round}`);
+                  const container = document.getElementById("roundResultContent");
+                  const titlePopup = document.getElementById("popupRoundTitle");
+                  // Cập nhật tiêu đề popup
+                  titlePopup.innerHTML = `
+                        <h3 class="text-xl font-bold mb-4 text-blue-700">📊 Kết Quả Vòng ${round}</h3>
+                        <button onclick="closeResultModal()"
+                              class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-lg">
+                              <i class="fa-solid fa-xmark"></i>
+                        </button>
+                        `;
+                  container.innerHTML = "";  // Xóa kết quả cũ
+                  if (!data) {
+                        container.innerHTML += `<p class="text-red-600">Chưa có dữ liệu xử lý vòng ${round}.</p>`;
+                  } else {
+                        const results = JSON.parse(data);
+                        results.forEach(res => {
+                              const winnerTeam = teams.find(t => t.id == res.winner)?.name || "Không có";
+                              const losers = res.losers.map(id => teams.find(t => t.id == id)?.name || "??").join(", ");
+                              const totalTroops = res.troops.reduce((sum, t) => sum + t.hau + t.tien + t.cong, 0);
+                              // Kiểm tra đội nào bị loại
+                              let eliminatedHTML = "";
+                              res.losers.forEach(teamId => {
+                                    const team = teams.find(t => t.id == teamId);
+                                    if (team && team.hau + team.tien + team.cong === 0) {
+                                          eliminatedHTML += `<p class="text-red-500 font-semibold">💀 Đội ${team.name} đã bị loại!</p>`;
+                                    }
+                              });
+                              container.innerHTML += `
+                                    <div class="border p-3 rounded shadow bg-gray-50 mb-4">
+                                    <p><strong>🏰 Thành:</strong> ${res.castleName}</p>
+                                    <p><strong>🎖️ Điểm Vinh Quang:</strong> ${res.glory}</p>
+                                    <p><strong>🪖 Tổng số quân hiện có trong thành:</strong> ${totalTroops}</p>
+                                    <p>------------------------</p>
+                                    <p><strong>🥇 Chiếm thành:</strong> ${winnerTeam}</p>
+                                    <p><strong>❌ Thất bại:</strong> ${losers || "Không có"}</p>
+                                    ${eliminatedHTML}
+                                    ${res.message ? `<p class="text-gray-500 italic">📌 ${res.message}</p>` : ""}
+                                    </div>
+                                    `;
+                        });
+                  }
+                  document.getElementById("roundResultModal").classList.remove("hidden");
+            }
+
+            function closeResultModal() {
+                  document.getElementById("roundResultModal").classList.add("hidden");
+            }
 
             function prevRound() {
                   if (currentRound > 1) {
