@@ -10,7 +10,7 @@
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
       <style>
             body {
-                  background-color: #f9fafb;
+                  background-color: #c4def8;
                   margin: 0;
                   padding: 0;
             }
@@ -40,6 +40,24 @@
 
             #round-content.fade-out {
                   opacity: 0;
+            }
+
+            .cart-team-shadow {
+                  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+            }
+
+            .cart-table-shadow {
+                  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+            }
+
+            .bg-color-gray-red {
+                  background-color: #dbcfcf;
+            }
+            .no-chiem{
+                  color: rgb(255 114 114);
+            }
+            .yes-chiem{
+                  color: rgb(158 255 207)
             }
       </style>
 </head>
@@ -89,7 +107,7 @@
 
                         <!-- Đây là nơi chứa danh sách các đội -->
                         <div id="teams-section" class="expandable-section">
-                              <div id="teams-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                              <div id="teams-container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
                         </div>
 
                   </div>
@@ -99,7 +117,7 @@
             <section id="castle-setup" class="mb-10 px-4">
                   <div class="bg-white shadow rounded-xl p-6">
                         <div class="flex justify-between items-center mb-4 border-b pb-3">
-                              <h2 class="text-2xl font-bold text-gray-800">🏰 Setup Tòa Thành AI</h2>
+                              <h2 class="text-2xl font-bold text-gray-800">🏯 Setup Tòa Thành AI</h2>
                               <div class="space-x-2">
                                     <button onclick="openCastleModal()"
                                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
@@ -128,7 +146,7 @@
                         <!-- Đây là nơi chứa danh sách các tòa thành -->
                         <div id="castle-section" class="expandable-section">
                               <div id="castle-list"
-                                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
                         </div>
                   </div>
             </section>
@@ -151,8 +169,8 @@
                                     id="nextRoundBtn">Vòng sau ➡️</button>
                         </div>
 
-                        <!-- Vùng hiển thị nội dung -->
-                        <div id="round-content" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4"></div>
+                        <!-- Vùng hiển thị nội dung các bảng nhập liêu -->
+                        <div id="round-content" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
 
                   </div>
             </section>
@@ -371,11 +389,10 @@
                   reader.onload = function (e) {
                         const avatar = e.target.result;
                         const id = Date.now();
-                        let soldiers = { hauphuong: 300, tientuyen: 150, congnghe: 100 };
+                        let soldiers = { hauphuong: 180, tientuyen: 90, congnghe: 60 };
                         // Thêm 1 biến tổng quân nữa totalSoldiers
                         let totalSoldiers = soldiers.hauphuong + soldiers.tientuyen + soldiers.congnghe;
                         let strength = soldiers.hauphuong * 1 + soldiers.tientuyen * 2 + soldiers.congnghe * 3;
-                        let allianceTickets = 3;
                         let glory = 0;
                         let newTeam = {
                               id,
@@ -384,7 +401,6 @@
                               soldiers,
                               totalSoldiers,
                               strength,
-                              allianceTickets,
                               glory,
                         };
                         teams.push(newTeam);
@@ -401,7 +417,7 @@
                   container.innerHTML = "";
                   teams.forEach(team => {
                         const div = document.createElement("div");
-                        div.className = "p-4 bg-white shadow rounded relative";
+                        div.className = "p-4  relative";
                         // ✅ Thêm class nếu đội bị loại
                         const extraClass = team.eliminated ? "opacity-50 border-red-400" : "border-gray-200";
                         const eliminatedNotice = team.eliminated
@@ -409,7 +425,7 @@
                               : "";
 
                         div.innerHTML = `
-  <div class="relative p-4 bg-white rounded-xl shadow hover:shadow-md transition border border-gray-200">
+  <div class="relative p-4 bg-white rounded-xl cart-team-shadow transition">
     <!-- Nút xóa -->
     <button onclick="deleteTeam(${team.id})"
             class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition text-lg"
@@ -430,24 +446,23 @@
             <tr class="border-b border-gray-200">
               <td class="py-1 px-2">🏹 Hậu Phương:</td>
               <td class="text-blue-700 font-medium">${team.soldiers.hauphuong}</td>
-              <td class="py-1 px-2">💪 Sức Mạnh:</td>
-              <td class="text-green-600 font-semibold">${team.strength} điểm</td>
+              <td class="py-1 px-2 text-green-600 font-bold">💪 Sức Mạnh:</td>
+              <td class="text-green-600 font-bold">${team.strength} điểm</td>
             </tr>
             <tr class="border-b border-gray-200">
               <td class="py-1 px-2">⚔️ Tiền Tuyến:</td>
               <td class="text-red-600 font-medium">${team.soldiers.tientuyen}</td>
-              <td class="py-1 px-2">🤝 Liên Minh:</td>
-              <td class="text-yellow-600 font-medium">${team.allianceTickets} phiếu</td>
+              <td class="py-1 px-2 text-yellow-600 font-bold">🏆 Vinh Quang:</td>
+              <td class="text-yellow-600 font-bold">${team.glory} điểm</td>
             </tr>
             <tr class="border-b border-gray-200">
               <td class="py-1 px-2">🤖 Công Nghệ:</td>
               <td class="text-purple-700 font-medium">${team.soldiers.congnghe}</td>
-              <td class="py-1 px-2">🏆 Vinh Quang:</td>
-              <td class="text-orange-500 font-medium">${team.glory} điểm</td>
+              
             </tr>
             <tr>
               <td class="py-1 px-2">🪖 Tổng Số Quân:</td>
-              <td colspan="3" class="font-bold">${team.totalSoldiers}</td>
+              <td colspan="3" class="font-medium">${team.totalSoldiers}</td>
             </tr>
           </tbody>
         </table>
@@ -468,6 +483,7 @@
 
             function saveTeams() {
                   localStorage.setItem("dau-truong-ai-teams", JSON.stringify(teams));
+                  console.log("Teams saved:", teams);
             }
 
             function resetTeams() {
@@ -539,7 +555,7 @@
               class="absolute top-2 right-2 text-gray-400 hover:text-red-600 text-lg">
         <i class="fa-solid fa-xmark"></i>
       </button>
-      <h3 class="text-lg font-bold text-gray-800 mb-2">🏰 ${c.name}</h3>
+      <h3 class="text-lg font-bold text-gray-800 mb-2">🏯 ${c.name}</h3>
       <p>🏆 Vinh quang: <span class="font-semibold text-orange-600">${c.gloryPoint}</span> điểm</p>
       <p>🎯 Số lần chiếm: <span class="text-blue-600 font-medium">${c.maxCaptures}</span> lần</p>
       <p>📍 Xuất hiện: ${c.appearsAtRound ? `Từ vòng ${c.appearsAtRound}` : "Từ đầu trận"}</p>
@@ -557,11 +573,11 @@
                   castles = stored ? JSON.parse(stored) : [];
 
                   // Kiểm tra xem đã có "Thành Xuất Phát" chưa
-                  const hasStartCastle = castles.some(c => c.id === "start" || c.name === "Thành Xuất Phát");
+                  const hasStartCastle = castles.some(c => c.id === "start" || c.name === "Xuất Phát");
                   if (!hasStartCastle) {
                         castles.unshift({
                               id: "start",
-                              name: "Thành Xuất Phát",
+                              name: "Xuất Phát",
                               gloryPoint: 0,
                               maxCaptures: 0,
                               isDefault: true
@@ -592,41 +608,54 @@
             // Tạo các bảng nhập liệu quân vào từng thành
             function generateCastleBattleTable(castle) {
                   const table = document.createElement("table");
-                  table.className = "w-full mb-4 border-2 border-gray-300 rounded bg-white text-sm shadow table-fixed";
+                  table.className = "w-full mb-4 border-2 border-gray-300 bg-white text-sm cart-table-shadow table-fixed";
 
                   const thead = `
     <thead class="bg-blue-100">
       <tr>
         <th class="px-2 py-1 text-center w-[30%]">Tên Đội</th>
-        <th class="px-2 py-1 text-center w-[15%]">🏹 Hậu Phương</th>
-        <th class="px-2 py-1 text-center w-[15%]">⚔️ Tiền Tuyến</th>
-        <th class="px-2 py-1 text-center w-[15%]">🤖 Công Nghệ</th>
-        <th class="px-2 py-1 text-center w-[25%]">Tổng Sức Mạnh</th>
+        <th class="px-2 py-1 text-center w-[15%]">🏹 HP</th>
+        <th class="px-2 py-1 text-center w-[15%]">⚔️ TT</th>
+        <th class="px-2 py-1 text-center w-[15%]">🤖 CN</th>
+        <th class="px-2 py-1 text-center w-[25%]">TSM</th>
       </tr>
     </thead>
   `;
 
                   const rows = [];
-                  for (let i = 0; i < 5; i++) {
-                        const teamOptions = `<option value="">-- Không chọn --</option>` +
-                              teams.map(team => `<option value="${team.id}">${team.name}</option>`).join("");
-
+                  teams.slice(0, 5).forEach(team => {
                         rows.push(`
-      <tr>
-        <td class="w-[30%]"><select class="team-select border-2 rounded px-1 py-0.5 w-full">${teamOptions}</select></td>
-        <td class="w-[15%]"><input type="number" class="hauphuong-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
-        <td class="w-[15%]"><input type="number" class="tientuyen-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
-        <td class="w-[15%]"><input type="number" class="congnghe-input text-center border-2 rounded px-1 py-0.5 w-full" min="0"></td>
-        <td class="w-[25%] total-strength text-center font-bold">0</td>
-      </tr>
-    `);
-                  }
+                        <tr data-team-id="${team.id}">
+                              <td class="w-[30%] font-bold text-gray-800 px-2 py-1">${team.name}</td>
+                              <td class="w-[15%]">
+                              <input type="number" class="hauphuong-input text-center border-2 rounded-lg px-1 py-0.5 w-full" min="0">
+                              </td>
+                              <td class="w-[15%]">
+                              <input type="number" class="tientuyen-input text-center border-2 rounded-lg px-1 py-0.5 w-full" min="0">
+                              </td>
+                              <td class="w-[15%]">
+                              <input type="number" class="congnghe-input text-center border-2 rounded-lg px-1 py-0.5 w-full" min="0">
+                              </td>
+                              <td class="w-[25%] total-strength text-center font-bold">0</td>
+                        </tr>
+                        `);
+                  });
+
+
+                  const captureColor = castle.maxCaptures > 0 ? "yes-chiem" : "no-chiem";
 
                   table.innerHTML = `
-    <caption class="text-md font-semibold py-2">🏰 ${castle.name} || 🏆 Vinh quang: ${castle.gloryPoint} || 🎯 Số lần chiếm: ${castle.maxCaptures}</caption>
-    ${thead}
-    <tbody>${rows.join("")}</tbody>
-  `;
+                        <caption class="py-2 bg-gray-500 text-white">
+                        <div class="flex justify-between text-sm font-bold w-full px-2">
+                              <span>🏯 ${castle.name}</span> |
+                              <span>🏆 Vinh quang: ${castle.gloryPoint}</span> |
+                              <span class="${captureColor}">🎯 Số lần chiếm còn lại: ${castle.maxCaptures}</span>
+                        </div>
+                        </caption>
+                        ${thead}
+                        <tbody>${rows.join("")}</tbody>
+                        `;
+
 
                   return table;
             }
@@ -662,7 +691,7 @@
                         container.innerHTML = "";
 
                         const title = document.getElementById("roundTitle");
-                        title.textContent = `🌀 VÒNG CHƠI SỐ ${round}`;
+                        title.textContent = `<(------------------- 🌀 VÒNG CHƠI SỐ ${round} -------------------)>`;
 
                         const inputData = JSON.parse(localStorage.getItem(`round-input-${round}`) || "[]");
 
@@ -680,15 +709,33 @@
                               const storedCastle = inputData.find(item => item.castleId === castle.id);
                               if (storedCastle) {
                                     const rows = table.querySelectorAll("tbody tr");
+                                   
+                                    // Lấy dữ liệu kết quả trận đấu từ localStorage
+                                    const roundResultData = JSON.parse(localStorage.getItem(`round-result-${round}`) || "[]");
+                                    const castleResult = roundResultData.find(r => r.castleId === castle.id);
+
                                     storedCastle.teamEntries.forEach((entry, index) => {
-                                          if (rows[index]) {
-                                                rows[index].querySelector(".team-select").value = entry.teamId;
-                                                rows[index].querySelector(".hauphuong-input").value = entry.hau;
-                                                rows[index].querySelector(".tientuyen-input").value = entry.tien;
-                                                rows[index].querySelector(".congnghe-input").value = entry.cong;
-                                                rows[index].querySelector(".total-strength").textContent = entry.totalStrength;
+                                          const row = rows[index];
+                                          if (!row) return;
+
+                                          const teamId = row.dataset.teamId;
+                                          if (teamId != entry.teamId) return;
+
+                                          row.querySelector(".hauphuong-input").value = entry.hau;
+                                          row.querySelector(".tientuyen-input").value = entry.tien;
+                                          row.querySelector(".congnghe-input").value = entry.cong;
+                                          row.querySelector(".total-strength").textContent = entry.totalStrength;
+
+                                          // ✅ Gán màu tùy theo kết quả
+                                          if (castleResult && entry.hau > 0 && entry.tien > 0 && entry.cong > 0) {
+                                                if (castleResult.winner == teamId) {
+                                                      row.classList.add("bg-green-200");
+                                                } else if (castleResult.losers.includes(teamId)) {
+                                                      row.classList.add("bg-red-200");
+                                                }
                                           }
                                     });
+
                               }
                         });
 
@@ -696,7 +743,7 @@
 
                         // ✅ Thêm các nút xử lý dưới bảng
                         const btnGroup = document.createElement("div");
-                        btnGroup.className = "flex gap-4 justify-end my-4 col-span-2";
+                        btnGroup.className = "flex gap-4 justify-end my-4 col-span-full";
                         btnGroup.innerHTML = `
                               <button onclick="processRoundData(${round})" class="px-4 py-2 rounded-lg bg-green-600 text-white rounded hover:bg-green-700">
                               ✅ Xử lý kết quả vòng ${round}
@@ -737,9 +784,9 @@
                   window.manualDeductionQueue.forEach((entry, idx) => {
                         const team = teams.find(t => t.id == entry.teamId);
                         container.innerHTML += `
-                              <div class="p-4 border rounded shadow">
+                              <div class="p-4 border-2 rounded-xl cart-table-shadow bg-color-gray-red">
                               <p class="mb-2 font-semibold text-gray-800">
-                              💀 Đội <strong>${team.name}</strong> tại thành <strong>${entry.castleName}</strong><br>
+                              💀 Tại thành <strong>${entry.castleName}</strong> Có đội: <strong>${team.name}</strong> giao tranh thất bại<br>
                               ➖ Cần loại quân có tổng sức mạnh = <strong>${entry.glory}</strong>
                               </p>
                               <div class="grid grid-cols-3 gap-2">
@@ -836,7 +883,7 @@
 
                   tables.forEach(table => {
                         const { castle, teamEntries } = extractCastleDataFromTable(table);
-                        if (!castle || castle.id === "start") return; // Bỏ qua Thành Xuất Phát
+                        if (!castle) return; // Bỏ qua Thành Xuất Phát
 
                         // ✅ Luôn lưu lại dữ liệu input dù có giao chiến hay không
                         inputData.push({ castleId: castle.id, teamEntries });
@@ -912,7 +959,7 @@
             // Hàm phụ: Trích xuất dữ liệu từ bảng thành
             function extractCastleDataFromTable(table) {
                   const captionText = table.caption.textContent;
-                  const castleName = captionText.split("||")[0].replace("🏰", "").trim();
+                  const castleName = captionText.split("|")[0].replace("🏯", "").trim();
                   const castle = castles.find(c => c.name.trim() === castleName);
                   if (!castle) return { castle: null, teamEntries: [] };
 
@@ -920,7 +967,7 @@
                   const teamEntries = [];
 
                   rows.forEach(row => {
-                        const teamId = row.querySelector(".team-select").value;
+                        const teamId = row.dataset.teamId;
                         if (!teamId) return;
 
                         const hau = parseInt(row.querySelector(".hauphuong-input").value || 0);
@@ -979,7 +1026,7 @@
                               team.glory += castle.gloryPoint;
                         }
 
-                        result.message = `✅ Đội ${team?.name || top.teamId} chiến thắng tại ${castle.name} `;
+                        result.message = `✅ Đội ${team?.name || top.teamId} chiến thắng tại Thành: ${castle.name} `;
 
                         // Xác định danh sách các đội thua (có tham gia giao tranh)
                         result.losers = qualified
@@ -1028,8 +1075,8 @@
                                     }
                               });
                               container.innerHTML += `
-                                    <div class="border p-3 rounded shadow bg-gray-50 mb-4">
-                                    <p><strong>🏰 Thành:</strong> ${res.castleName}</p>
+                                    <div class="border-2 p-3 rounded-xl cart-table-shadow bg-gray-100 mb-4">
+                                    <p><strong>🏯 Thành:</strong> ${res.castleName}</p>
                                     <p><strong>🎖️ Điểm Vinh Quang:</strong> ${res.glory}</p>
                                     <p><strong>🪖 Tổng số quân hiện có trong thành:</strong> ${totalTroops}</p>
                                     <p>------------------------</p>
