@@ -876,7 +876,7 @@
                         const deduction = deductionInputs[key];
                         const strength = deduction.hauphuong * 1 + deduction.tientuyen * 2 + deduction.congnghe * 3;
 
-                        if (strength <= entry.totalGlory) {
+                        if (strength < entry.totalGlory) {
                               isValid = false;
                               errors.push(`⚠️ Đội ${entry.team.name} cần tổng sức mạnh tối thiểu = ${entry.totalGlory}, hiện tại là ${strength}`);
                         }
