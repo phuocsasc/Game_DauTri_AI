@@ -121,13 +121,13 @@
 
                         <!-- Đây là nơi chứa danh sách các đội -->
                         <div id="teams-section" class="expandable-section">
-                              <div id="teams-container" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                              <div id="teams-container" class="grid grid-cols-1 md:grid-cols-3"></div>
                         </div>
 
                   </div>
             </section>
 
-            
+
 
             <!-- PHẦN 2: Ghi nhận quân đội di chuyển vào các tòa thành -->
             <section id="battle-inputs" class="mb-10 px-4">
@@ -156,7 +156,7 @@
             <section id="castle-setup" class="mb-10 px-4">
                   <div class="bg-white shadow rounded-xl p-6">
                         <div class="flex justify-between items-center mb-4 border-b pb-3">
-                              <h2 class="text-2xl font-bold text-gray-800">🏯 Setup Tòa Thành AI</h2>
+                              <h2 class="text-2xl font-bold text-gray-800">🧱 Setup Tòa Thành AI</h2>
                               <div class="space-x-2">
                                     <button onclick="openCastleModal()"
                                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
@@ -168,7 +168,7 @@
                                     </button>
                               </div>
                         </div>
-            
+
                         <div class="flex justify-between items-center mb-4">
                               <h3 class="text-lg font-semibold text-gray-700">📋 Danh Sách Các Tòa Thành</h3>
                               <div class="space-x-2">
@@ -184,7 +184,8 @@
                         </div>
                         <!-- Đây là nơi chứa danh sách các tòa thành -->
                         <div id="castle-section" class="expandable-section">
-                              <div id="castle-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                              <div id="castle-list"
+                                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                               </div>
                         </div>
                   </div>
@@ -305,7 +306,12 @@
                   </div>
             </div>
 
-
+            <!-- Bong bóng trừ quân -->
+            <div id="deductBubble"
+                  class="fixed top-10 left-10 bg-red-600 text-white px-3 py-2 rounded-full shadow-lg cursor-move z-50 hidden"
+                  onclick="toggleManualPopup()">
+                  ☠️ Trừ Quân 
+            </div>
 
 
 
@@ -568,7 +574,7 @@
               class="absolute top-2 right-2 text-gray-400 hover:text-red-600 text-lg">
         <i class="fa-solid fa-xmark"></i>
       </button>
-      <h3 class="text-lg font-bold text-gray-800 mb-2">🏯 ${c.name}</h3>
+      <h3 class="text-lg font-bold text-gray-800 mb-2">🧱 ${c.name}</h3>
       <p>🏆 Điểm thưởng: <span class="font-semibold text-orange-600">${c.gloryPoint}</span> điểm</p>
       <p>🎯 Số lần chiếm: <span class="text-blue-600 font-medium">${c.maxCaptures}</span> lần</p>
       <p>📍 Xuất hiện: ${c.appearsAtRound ? `Từ vòng ${c.appearsAtRound}` : "Từ đầu trận"}</p>
@@ -660,7 +666,7 @@
                   table.innerHTML = `
                         <caption class="py-2 bg-gray-500 text-white">
                         <div class="flex justify-between text-sm font-bold w-full px-2">
-                              <span class='name-thanh'>🏯 ${castle.name}</span> |
+                              <span class='name-thanh'>🧱 ${castle.name}</span> |
                               <span>🏆 Điểm thưởng: ${castle.gloryPoint}</span> |
                               <span class="${captureColor}">🎯 Số lần chiếm còn lại: ${castle.maxCaptures}</span>
                         </div>
@@ -845,7 +851,7 @@
             `;
                   });
 
-                  document.getElementById("manualDeductModal").classList.remove("hidden");
+                  // document.getElementById("manualDeductModal").classList.remove("hidden");
 
                   // Lưu lại để xử lý khi submit
                   window.groupedManualDeductionQueue = groupedEntries;
@@ -907,6 +913,7 @@
                   renderTeams();
                   document.getElementById("manualDeductModal").classList.add("hidden");
                   showToastSuccess("✅ Đã cập nhật trừ quân thủ công thành công.");
+                  document.getElementById("deductBubble").classList.add("hidden");
             }
 
 
@@ -989,7 +996,11 @@
                   if (manualDeductionQueue.length > 0) {
                         window.pendingManualDeductionRound = round;
                         window.pendingManualDeductionQueue = manualDeductionQueue;
-                        showManualDeductionPopup(manualDeductionQueue);
+                        // showManualDeductionPopup(manualDeductionQueue);
+                        document.getElementById("deductBubble").classList.remove("hidden");
+                        // Tạo nội dung sẵn cho popup (ẩn lúc đầu)
+                        window.pendingManualDeductionQueue = manualDeductionQueue;
+                        showManualDeductionPopup();
                   } else {
                         showToastSuccess(`✅ Đã xử lý kết quả vòng ${round}`);
                   }
@@ -999,7 +1010,7 @@
             // Hàm phụ: Trích xuất dữ liệu từ bảng thành
             function extractCastleDataFromTable(table) {
                   const captionText = table.caption.textContent;
-                  const castleName = captionText.split("|")[0].replace("🏯", "").trim();
+                  const castleName = captionText.split("|")[0].replace("🧱", "").trim();
                   const castle = castles.find(c => c.name.trim() === castleName);
                   if (!castle) return { castle: null, teamEntries: [] };
 
@@ -1116,7 +1127,7 @@
                               });
                               container.innerHTML += `
                                     <div class="border-2 p-3 rounded-xl cart-table-shadow bg-gray-100 mb-4">
-                                    <p><strong>🏯 Thành:</strong> ${res.castleName}</p>
+                                    <p><strong>🧱 Thành:</strong> ${res.castleName}</p>
                                     <p><strong>🎖️ Điểm Vinh Quang:</strong> ${res.glory}</p>
                                     <p><strong>🪖 Tổng số quân hiện có trong thành:</strong> ${totalTroops}</p>
                                     <p>------------------------</p>
@@ -1148,6 +1159,33 @@
                         renderRoundPage(currentRound);
                   }
             }
+
+            let isManualPopupVisible = false;
+
+            function toggleManualPopup() {
+                  const popup = document.getElementById("manualDeductModal");
+                  isManualPopupVisible = !isManualPopupVisible;
+                  popup.classList.toggle("hidden", !isManualPopupVisible);
+            }
+
+            const bubble = document.getElementById("deductBubble");
+            let isDragging = false, offsetX = 0, offsetY = 0;
+
+            bubble.addEventListener("mousedown", function (e) {
+                  isDragging = true;
+                  offsetX = e.clientX - bubble.getBoundingClientRect().left;
+                  offsetY = e.clientY - bubble.getBoundingClientRect().top;
+            });
+
+            document.addEventListener("mousemove", function (e) {
+                  if (!isDragging) return;
+                  bubble.style.left = `${e.clientX - offsetX}px`;
+                  bubble.style.top = `${e.clientY - offsetY}px`;
+            });
+
+            document.addEventListener("mouseup", function () {
+                  isDragging = false;
+            });
 
             window.onload = function () {
                   loadTeamsFromStorage();
