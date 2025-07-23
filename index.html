@@ -102,6 +102,12 @@
                                     <button onclick="resetTeams()"
                                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow transition">
                                           <i class="fa-solid fa-trash mr-2"></i> Reset Dữ Liệu ĐỘi</button>
+                                          
+                                    <button onclick="resetGame()"
+                                          class="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow transition">
+                                          <i class="fa-solid fa-rotate mr-2"></i> RESET GAME
+                                    </button>
+
                               </div>
                         </div>
 
@@ -310,9 +316,42 @@
             <div id="deductBubble"
                   class="fixed top-10 left-10 bg-red-600 text-white px-3 py-2 rounded-full shadow-lg cursor-move z-50 hidden"
                   onclick="toggleManualPopup()">
-                  ☠️ Trừ Quân 
+                  ☠️ Trừ Quân
             </div>
 
+<!-- // New code function () -->
+            <!-- Đồng hồ hẹn giờ đếm ngược -->
+            <div id="timerPopup"
+                  class="fixed top-24 left-24 bg-gray-300 border-2 border-gray-400 shadow-lg rounded-xl p-2 z-50 cursor-move w-104">
+                  <div class="text-center mb-1 ">
+                        <h3 class="text-lg font-bold text-blue-700 ">⏳ Hẹn giờ đếm ngược ⏳</h3>
+                        <!-- <button onclick="document.getElementById('timerPopup').classList.add('hidden')"
+                              class="text-red-500 hover:text-red-700 text-xl">
+                              &times;
+                        </button> -->
+                  </div>
+                  <div class="mb-2">
+                        <div class="flex gap-2 mt-1">
+                              <input type="number" id="timerMinutes" class="border w-1/2 px-2 rounded"
+                                    placeholder="Phút" min="0">
+                              <input type="number" id="timerSeconds" class="border w-1/2 px-2 rounded"
+                                    placeholder="Giây" min="0" max="59">
+                        </div>
+                  </div>
+
+                  <div class="flex justify-between gap-2">
+                        <button onclick="startCountdown()"
+                              class="bg-green-500 hover:bg-green-600 text-white px-4  rounded">▶
+                              Bắt đầu</button>
+                        <button onclick="stopCountdown()"
+                              class="bg-yellow-500 hover:bg-yellow-600 text-white px-4  rounded">⏹
+                              Dừng</button>
+                        <button onclick="resetCountdown()"
+                              class="bg-gray-500 hover:bg-gray-600 text-white px-4  rounded">♻
+                              Reset</button>
+                  </div>
+                  <div class="text-center mt-1 text-3xl font-bold text-red-600" id="countdownDisplay">00:00</div>
+            </div>
 
 
       </div>
@@ -586,25 +625,105 @@
             function saveCastles() {
                   localStorage.setItem("dau-truong-ai-castles", JSON.stringify(castles));
             }
-
+            // New code function ()
             function loadCastlesFromStorage() {
                   const stored = localStorage.getItem("dau-truong-ai-castles");
-                  castles = stored ? JSON.parse(stored) : [];
-
-                  // Kiểm tra xem đã có "Thành Xuất Phát" chưa
-                  const hasStartCastle = castles.some(c => c.id === "start" || c.name === "Xuất Phát");
-                  if (!hasStartCastle) {
-                        castles.unshift({
-                              id: "start",
-                              name: "Xuất Phát",
-                              gloryPoint: 0,
-                              maxCaptures: 0,
-                              isDefault: true
-                        });
-                        saveCastles(); // Lưu lại nếu vừa thêm mới
+                  if (stored) {
+                        castles = JSON.parse(stored);
+                  } else {
+                        // ✅ Tạo danh sách tòa thành mặc định
+                        castles = [
+                              {
+                                    id: "start",
+                                    name: "Xuất Phát",
+                                    gloryPoint: 0,
+                                    maxCaptures: 0,
+                                    isDefault: true
+                              },
+                              {
+                                    id: Date.now() + 1,
+                                    name: "Co 1",
+                                    gloryPoint: 15,
+                                    maxCaptures: 5,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 2,
+                                    name: "Co 2",
+                                    gloryPoint: 15,
+                                    maxCaptures: 5,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 3,
+                                    name: "Co 3",
+                                    gloryPoint: 15,
+                                    maxCaptures: 5,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 4,
+                                    name: "Gpt 1",
+                                    gloryPoint: 25,
+                                    maxCaptures: 3,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 5,
+                                    name: "Gpt 2",
+                                    gloryPoint: 25,
+                                    maxCaptures: 3,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 6,
+                                    name: "Gpt 3",
+                                    gloryPoint: 25,
+                                    maxCaptures: 3,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 7,
+                                    name: "Ge 1",
+                                    gloryPoint: 40,
+                                    maxCaptures: 2,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 8,
+                                    name: "Ge 2",
+                                    gloryPoint: 40,
+                                    maxCaptures: 2,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 9,
+                                    name: "Ge 3",
+                                    gloryPoint: 40,
+                                    maxCaptures: 2,
+                                    appearsAtRound: null
+                              },
+                              {
+                                    id: Date.now() + 10,
+                                    name: "Grok",
+                                    gloryPoint: 45,
+                                    maxCaptures: 1,
+                                    appearsAtRound: 2
+                              },
+                              {
+                                    id: Date.now() + 11,
+                                    name: "DeepSeek",
+                                    gloryPoint: 60,
+                                    maxCaptures: 1,
+                                    appearsAtRound: 4
+                              },
+                        ];
+                        saveCastles();
                   }
-                  renderCastles(); // Cập nhật UI
+
+                  renderCastles();
             }
+
 
             function deleteCastle(id) {
                   castles = castles.filter(c => c.id !== id);
@@ -767,9 +886,7 @@
                               <button onclick="processRoundData(${round})" class="px-4 py-2 rounded-lg bg-green-600 text-white rounded hover:bg-green-700">
                               ✅ Xử lý kết quả vòng ${round}
                               </button>
-                              <button onclick="viewRoundResult(${round})" class="px-4 py-2 rounded-lg bg-blue-600 text-white rounded hover:bg-blue-700">
-                              📊 Xem kết quả vòng ${round}
-                              </button>
+                              
                               <button onclick="resetRoundData(${round})" class="px-4 py-2 rounded-lg bg-red-600 text-white rounded hover:bg-red-700">
                               ♻️ Reset kết quả Vòng ${round}
                               </button>
@@ -1193,6 +1310,78 @@
                   renderRoundPage(currentRound);
             };
 
+            // New code function ()
+            let countdownTimer = null;
+            let countdownSeconds = 0;
+
+            function startCountdown() {
+                  const minInput = document.getElementById("timerMinutes");
+                  const secInput = document.getElementById("timerSeconds");
+                  const display = document.getElementById("countdownDisplay");
+
+                  let minutes = parseInt(minInput.value) || 0;
+                  let seconds = parseInt(secInput.value) || 0;
+
+                  if (minutes < 0 || seconds < 0 || seconds > 59 || (minutes === 0 && seconds === 0)) {
+                        showToastFailed("⛔ Vui lòng nhập thời gian hợp lệ.");
+                        return;
+                  }
+
+                  countdownSeconds = minutes * 60 + seconds;
+                  clearInterval(countdownTimer);
+                  updateCountdownDisplay();
+
+                  countdownTimer = setInterval(() => {
+                        countdownSeconds--;
+                        updateCountdownDisplay();
+                        if (countdownSeconds <= 0) {
+                              clearInterval(countdownTimer);
+                              showToastSuccess("⏰ Hết giờ!");
+                        }
+                  }, 1000);
+            }
+
+
+            function stopCountdown() {
+                  clearInterval(countdownTimer);
+            }
+
+            function resetCountdown() {
+                  clearInterval(countdownTimer);
+                  countdownSeconds = 0;
+                  updateCountdownDisplay();
+            }
+
+            function updateCountdownDisplay() {
+                  const m = String(Math.floor(countdownSeconds / 60)).padStart(2, '0');
+                  const s = String(countdownSeconds % 60).padStart(2, '0');
+                  document.getElementById("countdownDisplay").textContent = `${m}:${s}`;
+            }
+            const timerPopup = document.getElementById("timerPopup");
+            let isDraggingTimer = false, timerOffsetX = 0, timerOffsetY = 0;
+
+            timerPopup.addEventListener("mousedown", function (e) {
+                  isDraggingTimer = true;
+                  timerOffsetX = e.clientX - timerPopup.getBoundingClientRect().left;
+                  timerOffsetY = e.clientY - timerPopup.getBoundingClientRect().top;
+            });
+
+            document.addEventListener("mousemove", function (e) {
+                  if (!isDraggingTimer) return;
+                  timerPopup.style.left = `${e.clientX - timerOffsetX}px`;
+                  timerPopup.style.top = `${e.clientY - timerOffsetY}px`;
+            });
+
+            document.addEventListener("mouseup", function () {
+                  isDraggingTimer = false;
+            });
+
+            function resetGame() {
+                  if (confirm("⚠️ Bạn có chắc chắn muốn xoá toàn bộ dữ liệu game? Hành động này không thể hoàn tác!")) {
+                        localStorage.clear();
+                        location.reload(); // Tải lại trang để reset toàn bộ UI
+                  }
+            }
 
       </script>
 </body>
