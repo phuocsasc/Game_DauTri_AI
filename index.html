@@ -73,6 +73,10 @@
             .tru-quan {
                   color: red;
             }
+
+            .bg-tru-quan {
+                  background-color: #910c0c;
+            }
       </style>
 </head>
 
@@ -102,7 +106,7 @@
                                     <button onclick="resetTeams()"
                                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow transition">
                                           <i class="fa-solid fa-trash mr-2"></i> Reset Dữ Liệu ĐỘi</button>
-                                          
+
                                     <button onclick="resetGame()"
                                           class="bg-black hover:bg-gray-800 text-white px-4 py-2 rounded-lg shadow transition">
                                           <i class="fa-solid fa-rotate mr-2"></i> RESET GAME
@@ -164,6 +168,10 @@
                         <div class="flex justify-between items-center mb-4 border-b pb-3">
                               <h2 class="text-2xl font-bold text-gray-800">🧱 Setup Tòa Thành AI</h2>
                               <div class="space-x-2">
+                                    <button onclick="playSoundEffect()"
+                                          class="bg-gray-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                                          Sound Effect
+                                    </button>
                                     <button onclick="openCastleModal()"
                                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                                           <i class="fa-solid fa-plus mr-1"></i> Thêm Tòa Thành
@@ -314,15 +322,15 @@
 
             <!-- Bong bóng trừ quân -->
             <div id="deductBubble"
-                  class="fixed top-10 left-10 bg-red-600 text-white px-3 py-2 rounded-full shadow-lg cursor-move z-50 hidden"
-                  onclick="toggleManualPopup()">
-                  ☠️ Trừ Quân
+                  class="fixed top-2 left-60 bg-tru-quan text-lg font-bold text-white px-10 py-4 rounded-full shadow-lg cursor-move z-50 cart-team-shadow"
+                  onclick="openManualDeductionNow()">
+                  ☠️ Trừ Quân ☠️
             </div>
 
-<!-- // New code function () -->
+            <!-- // New code function () -->
             <!-- Đồng hồ hẹn giờ đếm ngược -->
             <div id="timerPopup"
-                  class="fixed top-24 left-24 bg-gray-300 border-2 border-gray-400 shadow-lg rounded-xl p-2 z-50 cursor-move w-104">
+                  class="fixed top-64 left-24 bg-gray-300 border-2 border-gray-400 shadow-lg rounded-xl p-2 z-50 cursor-move w-104 cart-table-shadow">
                   <div class="text-center mb-1 ">
                         <h3 class="text-lg font-bold text-blue-700 ">⏳ Hẹn giờ đếm ngược ⏳</h3>
                         <!-- <button onclick="document.getElementById('timerPopup').classList.add('hidden')"
@@ -343,9 +351,14 @@
                         <button onclick="startCountdown()"
                               class="bg-green-500 hover:bg-green-600 text-white px-4  rounded">▶
                               Bắt đầu</button>
-                        <button onclick="stopCountdown()"
+                        <!-- <button onclick="stopCountdown()"
                               class="bg-yellow-500 hover:bg-yellow-600 text-white px-4  rounded">⏹
-                              Dừng</button>
+                              Dừng</button> -->
+                        <button id="btnStartCountdown" onclick="resumeCountdown()"
+                              class="bg-green-500 hover:bg-green-600 text-white px-4 rounded hidden">▶ Chạy</button>
+
+                        <button id="btnStopCountdown" onclick="pauseCountdown()"
+                              class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 rounded">⏹ Dừng</button>
                         <button onclick="resetCountdown()"
                               class="bg-gray-500 hover:bg-gray-600 text-white px-4  rounded">♻
                               Reset</button>
@@ -353,7 +366,8 @@
                   <div class="text-center mt-1 text-3xl font-bold text-red-600" id="countdownDisplay">00:00</div>
             </div>
 
-
+            <audio id="alarmSound" src="bao-thuc-quan-doi-nhacchuongviet.com.mp3" preload="auto"></audio>
+            <audio id="soundEffect" src="Mario-Death.mp3" preload="auto"></audio>
       </div>
 
       <script>
@@ -663,21 +677,21 @@
                               },
                               {
                                     id: Date.now() + 4,
-                                    name: "Gpt 1",
+                                    name: "GPT 1",
                                     gloryPoint: 25,
                                     maxCaptures: 3,
                                     appearsAtRound: null
                               },
                               {
                                     id: Date.now() + 5,
-                                    name: "Gpt 2",
+                                    name: "GPT 2",
                                     gloryPoint: 25,
                                     maxCaptures: 3,
                                     appearsAtRound: null
                               },
                               {
                                     id: Date.now() + 6,
-                                    name: "Gpt 3",
+                                    name: "GPT 3",
                                     gloryPoint: 25,
                                     maxCaptures: 3,
                                     appearsAtRound: null
@@ -888,7 +902,7 @@
                               </button>
                               
                               <button onclick="resetRoundData(${round})" class="px-4 py-2 rounded-lg bg-red-600 text-white rounded hover:bg-red-700">
-                              ♻️ Reset kết quả Vòng ${round}
+                              ♻️ Reset kết quả Vòng ${round} 
                               </button>
                         `;
                         container.appendChild(btnGroup);
@@ -906,11 +920,42 @@
             // Xóa data từng vòng
             function resetRoundData(round) {
                   if (!confirm(`Bạn có chắc chắn muốn reset toàn bộ dữ liệu của vòng ${round}?`)) return;
+
+                  const roundDataStr = localStorage.getItem(`round-result-${round}`);
+                  if (roundDataStr) {
+                        const roundData = JSON.parse(roundDataStr);
+
+                        roundData.forEach(result => {
+                              // Trừ điểm thưởng nếu có đội thắng
+                              if (result.winner) {
+                                    const team = teams.find(t => t.id == result.winner);
+                                    if (team && result.glory) {
+                                          team.glory = Math.max(0, team.glory - result.glory);
+                                    }
+
+                                    // Cộng lại 1 lần chiếm cho thành đó
+                                    const castle = castles.find(c => c.id == result.castleId);
+                                    if (castle) {
+                                          castle.maxCaptures += 1;
+                                    }
+                              }
+                        });
+
+                        saveTeams();
+                        saveCastles();
+                        renderTeams();
+                        renderCastles();
+                  }
+
+                  // Xoá dữ liệu vòng khỏi localStorage
                   localStorage.removeItem(`round-result-${round}`);
                   localStorage.removeItem(`round-input-${round}`);
                   renderRoundPage(round);
-                  showToastSuccess(`Đã reset dữ liệu vòng ${round}`);
+
+                  showToastSuccess(`♻️ Đã reset dữ liệu vòng ${round}, hoàn tác điểm thưởng và phục hồi lượt chiếm.`);
             }
+
+
 
             // Hiển thi popup trừ quân khi giao tranh thất bại
             function showManualDeductionPopup() {
@@ -1303,6 +1348,44 @@
             document.addEventListener("mouseup", function () {
                   isDragging = false;
             });
+            function openManualDeductionNow() {
+                  // Tạo queue trống hoặc load từ round gần nhất
+                  const lastRound = currentRound;
+                  const storedData = localStorage.getItem(`round-result-${lastRound}`);
+                  if (!storedData) {
+                        showToastFailed("Chưa có dữ liệu vòng nào để trừ quân.");
+                        return;
+                  }
+
+                  const results = JSON.parse(storedData);
+                  const deductionQueue = [];
+
+                  results.forEach(res => {
+                        if (res.losers && res.losers.length > 0) {
+                              res.losers.forEach(teamId => {
+                                    const team = teams.find(t => t.id == teamId);
+                                    if (team && !team.eliminated) {
+                                          deductionQueue.push({
+                                                teamId: team.id,
+                                                teamName: team.name,
+                                                castleName: res.castleName,
+                                                glory: res.glory
+                                          });
+                                    }
+                              });
+                        }
+                  });
+
+                  if (deductionQueue.length === 0) {
+                        showToastFailed("Không có đội nào cần trừ quân.");
+                        return;
+                  }
+
+                  window.manualDeductionQueue = deductionQueue;
+                  showManualDeductionPopup();
+                  toggleManualPopup(); // Hiện popup
+            }
+
 
             window.onload = function () {
                   loadTeamsFromStorage();
@@ -1337,20 +1420,52 @@
                         if (countdownSeconds <= 0) {
                               clearInterval(countdownTimer);
                               showToastSuccess("⏰ Hết giờ!");
+                              document.getElementById("alarmSound").play(); // 🔊 Phát âm thanh
                         }
                   }, 1000);
+                  document.getElementById("btnStartCountdown").classList.add("hidden");
+                  document.getElementById("btnStopCountdown").classList.remove("hidden");
+
             }
 
 
-            function stopCountdown() {
+
+            function pauseCountdown() {
                   clearInterval(countdownTimer);
+                  // Ẩn nút Dừng, hiện nút Chạy
+                  document.getElementById("btnStopCountdown").classList.add("hidden");
+                  document.getElementById("btnStartCountdown").classList.remove("hidden");
             }
+
+            function resumeCountdown() {
+                  if (countdownSeconds <= 0) return;
+                  countdownTimer = setInterval(() => {
+                        countdownSeconds--;
+                        updateCountdownDisplay();
+                        if (countdownSeconds <= 0) {
+                              clearInterval(countdownTimer);
+                              showToastSuccess("⏰ Hết giờ!");
+                              document.getElementById("alarmSound").play(); // 🔊 Phát âm thanh
+                        }
+                  }, 1000);
+                  // Ẩn nút Chạy, hiện nút Dừng
+                  document.getElementById("btnStartCountdown").classList.add("hidden");
+                  document.getElementById("btnStopCountdown").classList.remove("hidden");
+            }
+
 
             function resetCountdown() {
                   clearInterval(countdownTimer);
                   countdownSeconds = 0;
                   updateCountdownDisplay();
+                  document.getElementById("btnStartCountdown").classList.add("hidden");
+                  document.getElementById("btnStopCountdown").classList.remove("hidden");
+                  // 🔇 Tắt âm thanh nếu đang phát
+                  const audio = document.getElementById("alarmSound");
+                  audio.pause();
+                  audio.currentTime = 0;
             }
+
 
             function updateCountdownDisplay() {
                   const m = String(Math.floor(countdownSeconds / 60)).padStart(2, '0');
@@ -1382,6 +1497,14 @@
                         location.reload(); // Tải lại trang để reset toàn bộ UI
                   }
             }
+            function playSoundEffect() {
+                  const audio = document.getElementById("soundEffect");
+                  if (audio) {
+                        audio.currentTime = 0; // tua lại đầu nếu đã phát
+                        audio.play();
+                  }
+            }
+
 
       </script>
 </body>
